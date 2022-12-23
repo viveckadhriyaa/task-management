@@ -18,6 +18,8 @@ import { UpdateTaskStatusDto } from "./dto/update-task-status.dto";
 import { Task } from "./task.entity";
 import { TasksService } from "./tasks.service";
 import { Logger } from "@nestjs/common";
+import { Pagination } from 'nestjs-typeorm-paginate';
+
 
 @Controller("tasks")
 @UseGuards(AuthGuard())
@@ -29,7 +31,7 @@ export class TasksController {
   getTasks(
     @Query() filterDto: GetTasksFilterDto,
     @GetUser() user: User
-  ): Promise<Task[]> {
+  ): Promise<Pagination<Task>> {
     this.logger.verbose(
       `User "${user.email}" retrieving all tasks, Filters ${JSON.stringify(
         filterDto

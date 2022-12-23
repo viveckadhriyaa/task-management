@@ -11,17 +11,22 @@ import { GetTasksFilterDto } from "./dto/get-tasks-filter.dto";
 import { TaskStatus } from "./task-status.enum";
 import { Task } from "./task.entity";
 import { Logger } from "@nestjs/common";
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class TasksRepository {
   private logger = new Logger("TasksRepository", { timestamp: true });
   constructor(
     @InjectRepository(Task)
-    private readonly taskEntityRepository: Repository<Task>
+    private taskEntityRepository: Repository<Task>
   ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
-    const { status, search } = filterDto;
+  async getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Pagination<Task>> {
+    const { status, search, limit, page } = filterDto;
+    const options: IPaginationOptions = {
+      limit,
+      page,
+    };    
     const query = this.taskEntityRepository.createQueryBuilder("task");
     query.where({ user });
 
@@ -37,13 +42,21 @@ export class TasksRepository {
     }
 
     try {
-      const tasks = await query.getMany();
-      return tasks;
+      query.getMany();
+      query.orderBy("task.id", "DESC");
+      return paginate<Task>(query, options);
     } catch (error) {
       this.logger.error(`Failed to get tasks for user ${user.email}`, error.stack);
       throw new InternalServerErrorException();
     }
   }
+
+  // async paginate(options: IPaginationOptions): Promise<Pagination<Task>> {
+  //   const query = this.taskEntityRepository.createQueryBuilder("task");
+  //   query.orderBy("task.id", "DESC");
+
+  //   return paginate<Task>(query, options);
+  // }   
 
   async findById(id: string, user: User): Promise<Task> {
     const found = await this.taskEntityRepository.findOneBy({ id, user });

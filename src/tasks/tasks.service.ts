@@ -5,12 +5,14 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { Task } from './task.entity';
 import { TasksRepository } from './tasks.repository';
 import { User } from 'src/auth/user.entity';
+import { Pagination } from 'nestjs-typeorm-paginate';
+
 
 @Injectable()
 export class TasksService {
   constructor(private tasksRepository: TasksRepository) {}
 
-  async getAllTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
+  async getAllTasks(filterDto: GetTasksFilterDto, user: User): Promise<Pagination<Task>> {
     return this.tasksRepository.getTasks(filterDto, user);
   }
 
